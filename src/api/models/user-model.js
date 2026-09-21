@@ -1,23 +1,85 @@
-const users = [
-  {
-    user_id: 1,
-    username: "khush",
-    email: "khush@example.com",
-  },
-];
+import promisePool from "../../utils/database.js";
 
-const listAllUsers = () => {
-  return users;
+const listAllUsers = async () => {
+  const [rows] = await promisePool.query("SELECT * FROM wsk_users");
+  console.log("rows", rows);
+  return rows;
 };
 
-const findUserById = (id) => {
-  return users.find((user) => user.user_id === Number(id));
+const findUserById = async (id) => {
+  const [rows] = await promisePool.execute(
+    "SELECT * FROM wsk_users WHERE user_id = ?",
+    [id],
+  );
+
+  console.log("rows", rows);
+
+  if (rows.length === 0) {
+    return false;
+  }
+
+  return rows[0];
 };
 
-const addUser = (user) => {
-  user.user_id = users.length + 1;
-  users.push(user);
-  return user;
+const addUser = async (user) => {
+  const { name, username, email, password, role } = user;
+
+  const sql = `INSERT INTO wsk_users
+               (name, username, email, password, role)
+               VALUES (?, ?, ?, ?, ?)`;
+
+  const params = [name, username, email, password, role];
+
+  const rows = await promisePool.execute(sql, params);
+
+  if (rows[0].affectedRows === 0) {
+    return false;
+  }
+
+  return { user_id: rows[0].insertId };
 };
 
-export { listAllUsers, findUserById, addUser };
+const modifyUser = async (user, id) => {
+  const sql = promisePool.format("UPDATE wsk_users SET ? WHERE user_id = ?", [
+    user,
+    id,
+  ]);
+
+  const rows = await promisePool.execute(sql);
+
+  if (rows[0].affectedRows === 0) {
+    return false;
+  }
+
+  return { message: "success" };
+};
+
+const removeUser = async (id) => {
+  const connection = await promisePool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    await connection.execute("DELETE FROM wsk_cats WHERE owner = ?", [id]);
+
+    const [rows] = await connection.execute(
+      "DELETE FROM wsk_users WHERE user_id = ?",
+      [id],
+    );
+
+    if (rows.affectedRows === 0) {
+      await connection.rollback();
+      return false;
+    }
+
+    await connection.commit();
+    return { message: "success" };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+export { listAllUsers, findUserById, addUser, modifyUser, removeUser };

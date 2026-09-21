@@ -1,11 +1,19 @@
-import { listAllCats, findCatById, addCat } from "../models/cat-model.js";
+import {
+  listAllCats,
+  findCatById,
+  findCatsByUserId,
+  addCat,
+  modifyCat,
+  removeCat,
+} from "../models/cat-model.js";
 
-const getCats = (req, res) => {
-  res.json(listAllCats());
+const getCats = async (req, res) => {
+  const cats = await listAllCats();
+  res.json(cats);
 };
 
-const getCatById = (req, res) => {
-  const cat = findCatById(req.params.id);
+const getCatById = async (req, res) => {
+  const cat = await findCatById(req.params.id);
 
   if (!cat) {
     return res.status(404).json({ message: "Cat not found." });
@@ -14,26 +22,47 @@ const getCatById = (req, res) => {
   res.json(cat);
 };
 
-const postCat = (req, res) => {
+const getCatsByUserId = async (req, res) => {
+  const cats = await findCatsByUserId(req.params.id);
+  res.json(cats);
+};
+
+const postCat = async (req, res) => {
   console.log("body:", req.body);
   console.log("file:", req.file);
 
   const newCat = {
     ...req.body,
-    image: req.file ? req.file.filename : null,
+    filename: req.file ? req.file.filename : null,
   };
 
-  const addedCat = addCat(newCat);
+  const result = await addCat(newCat);
 
-  res.status(201).json(addedCat);
+  if (!result) {
+    return res.status(400).json({ message: "Cat not added." });
+  }
+
+  res.status(201).json(result);
 };
 
-const putCat = (req, res) => {
-  res.json({ message: "Cat item updated." });
+const putCat = async (req, res) => {
+  const result = await modifyCat(req.body, req.params.id);
+
+  if (!result) {
+    return res.status(404).json({ message: "Cat not found." });
+  }
+
+  res.json(result);
 };
 
-const deleteCat = (req, res) => {
-  res.json({ message: "Cat item deleted." });
+const deleteCat = async (req, res) => {
+  const result = await removeCat(req.params.id);
+
+  if (!result) {
+    return res.status(404).json({ message: "Cat not found." });
+  }
+
+  res.json(result);
 };
 
-export { getCats, getCatById, postCat, putCat, deleteCat };
+export { getCats, getCatById, getCatsByUserId, postCat, putCat, deleteCat };
