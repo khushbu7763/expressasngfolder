@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "apidoc": "apidoc -i src/ -o docs/"
   },
   "keywords": [],
   "type": "module",
   "dependencies": {
+    "apidoc": "^1.2.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.1",

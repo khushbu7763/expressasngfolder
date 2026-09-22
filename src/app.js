@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/public", express.static("public"));
+app.use("/docs", express.static("docs"));
 
 app.get("/", (req, res) => {
   res.send("Welcome to REST API");
