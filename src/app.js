@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import api from "./api/index.js";
+import { notFoundHandler, errorHandler } from "./middlewares/error-handlers.js";
 
 const app = express();
 
@@ -16,5 +17,11 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1", api);
+
+// Default for all routes not handled by routers above
+app.use(notFoundHandler);
+
+// Add error handler middleware as the last middleware in the chain
+app.use(errorHandler);
 
 export default app;

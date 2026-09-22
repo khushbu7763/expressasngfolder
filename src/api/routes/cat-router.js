@@ -1,8 +1,10 @@
-import { createThumbnail } from "../../middlewares/upload.js";
-import { authenticateToken } from "../../middlewares/authentication.js";
-
 import express from "express";
-import multer from "multer";
+import { body } from "express-validator";
+
+import { upload, createThumbnail } from "../../middlewares/upload.js";
+
+import { authenticateToken } from "../../middlewares/authentication.js";
+import { validationErrors } from "../../middlewares/error-handlers.js";
 
 import {
   getCats,
@@ -15,14 +17,20 @@ import {
 
 const catRouter = express.Router();
 
-const upload = multer({
-  dest: "uploads/",
-});
-
 catRouter
   .route("/")
   .get(getCats)
-  .post(upload.single("cat"), createThumbnail, postCat);
+  .post(
+    authenticateToken,
+    upload.single("cat"),
+    body("cat_name").trim().isLength({ min: 3, max: 50 }),
+    body("weight").isNumeric(),
+    body("owner").isInt(),
+    body("birthdate").isDate(),
+    validationErrors,
+    createThumbnail,
+    postCat,
+  );
 
 catRouter.route("/user/:id").get(getCatsByUserId);
 
