@@ -1,3 +1,5 @@
+import bcrypt from "bcrypt";
+
 import {
   listAllUsers,
   findUserById,
@@ -22,6 +24,8 @@ const getUserById = async (req, res) => {
 };
 
 const postUser = async (req, res) => {
+  req.body.password = bcrypt.hashSync(req.body.password, 10);
+
   const newUser = await addUser(req.body);
 
   if (!newUser) {
@@ -32,6 +36,13 @@ const postUser = async (req, res) => {
 };
 
 const putUser = async (req, res) => {
+  if (
+    res.locals.user.user_id !== Number(req.params.id) &&
+    res.locals.user.role !== "admin"
+  ) {
+    return res.status(403).json({ message: "Not authorized." });
+  }
+
   const result = await modifyUser(req.body, req.params.id);
 
   if (!result) {
@@ -42,6 +53,13 @@ const putUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
+  if (
+    res.locals.user.user_id !== Number(req.params.id) &&
+    res.locals.user.role !== "admin"
+  ) {
+    return res.status(403).json({ message: "Not authorized." });
+  }
+
   const result = await removeUser(req.params.id);
 
   if (!result) {

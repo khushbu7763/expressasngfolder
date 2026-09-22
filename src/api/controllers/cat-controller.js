@@ -46,20 +46,20 @@ const postCat = async (req, res) => {
 };
 
 const putCat = async (req, res) => {
-  const result = await modifyCat(req.body, req.params.id);
+  const result = await modifyCat(req.body, req.params.id, res.locals.user);
 
   if (!result) {
-    return res.status(404).json({ message: "Cat not found." });
+    return res.status(403).json({ message: "Not authorized." });
   }
 
   res.json(result);
 };
 
 const deleteCat = async (req, res) => {
-  const result = await removeCat(req.params.id);
+  const result = await removeCat(req.params.id, res.locals.user);
 
   if (!result) {
-    return res.status(404).json({ message: "Cat not found." });
+    return res.status(403).json({ message: "Not authorized." });
   }
 
   res.json(result);
